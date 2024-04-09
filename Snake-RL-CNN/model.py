@@ -85,10 +85,11 @@ class QTrainer:
         #    print(len(state[0]))
         print(type(state))
         print(len(state))
+        #pred = torch.empty()
         state_ = torch.tensor(state[0], dtype=torch.float, device=self.device)#.unsqueeze(0)
-        board = torch.tensor(state[1], dtype=torch.float, device=self.device)
+        board = state[1]
         next_state_ = torch.tensor(next_state[0], dtype=torch.float, device=self.device)
-        next_board = torch.tensor(next_state[1], dtype=torch.float, device=self.device)
+        next_board = next_state[1]
         action = torch.tensor(action, dtype=torch.float, device=self.device)
         reward = torch.tensor(reward, dtype=torch.float, device=self.device)
         # (n, x)
