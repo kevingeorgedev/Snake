@@ -6,15 +6,14 @@ from game import SnakeGameAI, Direction, Point
 from model import Linear_QNet, QTrainer
 from helper import plot
 
-MAX_MEMORY = 200000
-BATCH_SIZE = 1000
+MAX_MEMORY = 100000
+BATCH_SIZE = 128
 LR = 0.001
 
 def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
 class Agent:
-
     def __init__(self):
         self.n_games = 0
         self.epsilon = 0   # randomness control
@@ -68,13 +67,15 @@ class Agent:
             game.food.y < game.head.y, # food up
             game.food.y > game.head.y # food down
         ]
+        # Convert state to a 2D array with shape (1, len(state))
+        #state = np.array(state, dtype=int).reshape(1, -1)
 
-        return np.array(state, dtype=int)
+        return np.array(state, dtype=int), game.get_board_pixels()
 
     def remember(self, state, action, reward, next_state, done):
         self.memory.append((state, action, reward, next_state, done)) # popleft if MAX_MEMORY is reached
 
-    def train_long_memory(self, game: SnakeGameAI):
+    def train_long_memory(self):
         if len(self.memory) > BATCH_SIZE:
             mini_sample = random.sample(self.memory, BATCH_SIZE) # list of tuples
         else:
@@ -82,14 +83,13 @@ class Agent:
 
         states, actions, rewards, next_states, dones = zip(*mini_sample)
         #print("THiS TRAIN")
-        self.trainer.train_step(states, actions, rewards, next_states, dones, game)
+        self.trainer.train_step(states, actions, rewards, next_states, dones)
 
-    def train_short_memory(self, state, action, reward, next_state, done, game: SnakeGameAI):
+    def train_short_memory(self, state, action, reward, next_state, done):
         #print("NO THIS")
-        self.trainer.train_step(state, action, reward, next_state, done, game)
+        self.trainer.train_step(state, action, reward, next_state, done)
 
-
-    def get_action(self, state, game: SnakeGameAI):
+    def get_action(self, state):
         # random moves: tradeoff between exploration and exploitation
         self.epsilon = 120 - self.n_games
         final_move = [0,0,0]
@@ -97,9 +97,10 @@ class Agent:
             move = random.randint(0, 2)
             final_move[move] = 1
         else:
-            state0 = torch.tensor(state, dtype=torch.float, device=torch.device('cuda:0')).unsqueeze(0)
+            state0 = torch.tensor(state[0], dtype=torch.float, device=torch.device('cuda:0'))#.unsqueeze(0)
+            state1 = torch.tensor(state[1], dtype=torch.float, device=torch.device('cuda:0'))#.unsqueeze(0)
             #print("HERE3")
-            prediction = self.model(game.get_board_pixels(), state0)
+            prediction = self.model(zip(state0, state1))
             move = torch.argmax(prediction).item()
             final_move[move] = 1
 
@@ -117,14 +118,14 @@ def train():
         state_old = agent.get_state(game)
 
         # get move
-        final_move = agent.get_action(state_old, game)
+        final_move = agent.get_action(state_old)
 
         # perform move and get new state
         reward, done, score = game.play_step(final_move)
         state_new = agent.get_state(game)
 
         # train short memory
-        agent.train_short_memory(state_old, final_move, reward, state_new, done, game)
+        agent.train_short_memory(state_old, final_move, reward, state_new, done)
 
         # remember
         agent.remember(state_old, final_move, reward, state_new, done)
@@ -133,7 +134,7 @@ def train():
             # train long memory, plot result
             game.reset()
             agent.n_games += 1
-            agent.train_long_memory(game)
+            agent.train_long_memory()
 
             if score > record:
                 record = score
