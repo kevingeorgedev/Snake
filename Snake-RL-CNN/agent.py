@@ -82,7 +82,8 @@ class Agent:
             mini_sample = self.memory
 
         states, actions, rewards, next_states, dones = zip(*mini_sample)
-        #print("THiS TRAIN")
+        print("THiS TRAIN")
+        
         self.trainer.train_step(states, actions, rewards, next_states, dones)
 
     def train_short_memory(self, state, action, reward, next_state, done):
@@ -97,10 +98,10 @@ class Agent:
             move = random.randint(0, 2)
             final_move[move] = 1
         else:
-            state0 = torch.tensor(state[0], dtype=torch.float, device=torch.device('cuda:0'))#.unsqueeze(0)
-            state1 = torch.tensor(state[1], dtype=torch.float, device=torch.device('cuda:0'))#.unsqueeze(0)
+            state0 = torch.tensor(state[0], dtype=torch.float, device=torch.device('cuda:0')).unsqueeze(0)
+            #state1 = torch.tensor(state[1], dtype=torch.float, device=torch.device('cuda:0'))#.unsqueeze(0)
             #print("HERE3")
-            prediction = self.model(zip(state0, state1))
+            prediction = self.model(state0, state[1])
             move = torch.argmax(prediction).item()
             final_move[move] = 1
 

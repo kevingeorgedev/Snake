@@ -4,6 +4,7 @@ from enum import Enum
 from collections import namedtuple
 import numpy as np
 import torch
+from skimage.transform import resize
 
 pygame.init()
 font = pygame.font.Font('arial.ttf', 25)
@@ -42,10 +43,13 @@ class SnakeGameAI:
         """
         Get the RGB values of the game board as a PyTorch tensor.
         """
+        # 32 x 24
         # Update the UI to ensure the display is up-to-date
         self._update_ui()
         # Get the RGB values of the display surface
         board_pixels = pygame.surfarray.array3d(self.display)
+        board_pixels = resize(board_pixels, (32, 24), order=0, anti_aliasing=False)
+        
         # Convert to PyTorch tensor
         board_pixels_tensor = torch.tensor(board_pixels, dtype=torch.float32, device=torch.device('cuda:0'))
         return board_pixels_tensor
