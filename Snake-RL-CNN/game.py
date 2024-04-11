@@ -23,10 +23,12 @@ WHITE = (255, 255, 255)
 RED = (200,0,0)
 BLUE1 = (0, 0, 255)
 BLUE2 = (0, 100, 255)
+GREEN = (0, 255, 0)
+
 BLACK = (0,0,0)
 
 BLOCK_SIZE = 20
-SPEED = 20
+SPEED = 100
 
 class SnakeGameAI:
     
@@ -49,9 +51,13 @@ class SnakeGameAI:
         # Get the RGB values of the display surface
         board_pixels = pygame.surfarray.array3d(self.display)
         board_pixels = resize(board_pixels, (32, 24), order=0, anti_aliasing=False)
+
+        # Normalize RGB values
+        board_pixels = board_pixels / 255.0
         
         # Convert to PyTorch tensor
-        board_pixels_tensor = torch.tensor(board_pixels, dtype=torch.float32, device=torch.device('cuda:0'))
+        board_pixels_tensor = torch.tensor(board_pixels, dtype=torch.float32, device=torch.device('cuda:0')).permute(2,0,1).unsqueeze(0)
+        #print(board_pixels_tensor.shape)
         return board_pixels_tensor
 
     def reset(self):
@@ -123,10 +129,15 @@ class SnakeGameAI:
         
     def _update_ui(self):
         self.display.fill(BLACK)
+
+        l = len(self.snake)
         
-        for pt in self.snake:
-            pygame.draw.rect(self.display, BLUE1, pygame.Rect(pt.x, pt.y, BLOCK_SIZE, BLOCK_SIZE))
-            pygame.draw.rect(self.display, BLUE2, pygame.Rect(pt.x+4, pt.y+4, 12, 12))
+        for i, pt in enumerate(self.snake):
+            if i == 0:
+                pygame.draw.rect(self.display, GREEN, pygame.Rect(pt.x, pt.y, BLOCK_SIZE, BLOCK_SIZE))
+            else:
+                pygame.draw.rect(self.display, (0, 0, int(255 * (l-i+1)/l)), pygame.Rect(pt.x, pt.y, BLOCK_SIZE, BLOCK_SIZE))
+            #pygame.draw.rect(self.display, BLUE2, pygame.Rect(pt.x+4, pt.y+4, 12, 12))
             
         pygame.draw.rect(self.display, RED, pygame.Rect(self.food.x, self.food.y, BLOCK_SIZE, BLOCK_SIZE))
         

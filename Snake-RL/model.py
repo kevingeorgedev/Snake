@@ -68,6 +68,7 @@ class QTrainer:
         #print(state.shape)
         # 1: predicted Q values with current state
         pred = self.model(state)
+        print(pred.shape)
 
         target = pred.clone()
         for idx in range(len(done)):

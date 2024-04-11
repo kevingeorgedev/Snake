@@ -6,8 +6,8 @@ from game import SnakeGameAI, Direction, Point
 from model import Linear_QNet, QTrainer
 from helper import plot
 
-MAX_MEMORY = 100000
-BATCH_SIZE = 128
+MAX_MEMORY = 300000
+BATCH_SIZE = 1000
 LR = 0.001
 
 def count_parameters(model):
@@ -31,12 +31,22 @@ class Agent:
         point_u = Point(head.x, head.y - 20)
         point_d = Point(head.x, head.y + 20)
 
+        point_top_l = Point(head.x - 20, head.y - 20)
+        point_top_r = Point(head.x + 20, head.y - 20)
+        point_bottom_l = Point(head.x - 20, head.y + 20)
+        point_bottom_r = Point(head.x + 20, head.y + 20)
+
         dir_l = game.direction == Direction.LEFT
         dir_r = game.direction == Direction.RIGHT
         dir_u = game.direction == Direction.UP
         dir_d = game.direction == Direction.DOWN
 
         state = [
+            game.is_collision(point_top_l),
+            game.is_collision(point_top_r),
+            game.is_collision(point_bottom_l),
+            game.is_collision(point_bottom_r),
+
             # Danger straight
             (dir_r and game.is_collision(point_r)) or
             (dir_l and game.is_collision(point_l)) or
@@ -70,7 +80,7 @@ class Agent:
         # Convert state to a 2D array with shape (1, len(state))
         #state = np.array(state, dtype=int).reshape(1, -1)
 
-        return np.array(state, dtype=int), game.get_board_pixels()
+        return torch.tensor(state, dtype=int, device=torch.device('cuda:0')).unsqueeze(0), game.get_board_pixels()
 
     def remember(self, state, action, reward, next_state, done):
         self.memory.append((state, action, reward, next_state, done)) # popleft if MAX_MEMORY is reached
@@ -82,8 +92,8 @@ class Agent:
             mini_sample = self.memory
 
         states, actions, rewards, next_states, dones = zip(*mini_sample)
-        print("THiS TRAIN")
-        
+        #print("THiS TRAIN")
+        #print(type(states), type(states[0]), type(states[0][0]), states[0][1][0])
         self.trainer.train_step(states, actions, rewards, next_states, dones)
 
     def train_short_memory(self, state, action, reward, next_state, done):
@@ -92,13 +102,13 @@ class Agent:
 
     def get_action(self, state):
         # random moves: tradeoff between exploration and exploitation
-        self.epsilon = 120 - self.n_games
+        self.epsilon = 80 - self.n_games
         final_move = [0,0,0]
-        if random.randint(0,240) < self.epsilon:
+        if random.randint(0,200) < self.epsilon:
             move = random.randint(0, 2)
             final_move[move] = 1
         else:
-            state0 = torch.tensor(state[0], dtype=torch.float, device=torch.device('cuda:0')).unsqueeze(0)
+            state0 = torch.tensor(state[0], dtype=torch.float, device=torch.device('cuda:0'))#.unsqueeze(0)
             #state1 = torch.tensor(state[1], dtype=torch.float, device=torch.device('cuda:0'))#.unsqueeze(0)
             #print("HERE3")
             prediction = self.model(state0, state[1])
