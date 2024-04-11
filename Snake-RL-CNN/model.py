@@ -12,11 +12,11 @@ class Linear_QNet(nn.Module):
         super().__init__()
         
         self.conv1 = nn.Sequential(
-            nn.Conv2d(in_channels=3, out_channels=64, kernel_size=7, stride=1, padding=1),
+            nn.Conv2d(in_channels=3, out_channels=64, kernel_size=3, stride=1, padding=1),
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=2),
             
-            nn.Conv2d(in_channels=64, out_channels=128, kernel_size=5, stride=1, padding=1),
+            nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, stride=1, padding=1),
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=2),
 
@@ -26,17 +26,17 @@ class Linear_QNet(nn.Module):
         )
 
         self.conv_linear = nn.Sequential(
-            nn.Linear(in_features=1536, out_features=256),
+            nn.Linear(in_features=3072, out_features=256),
             nn.ReLU(),
-            nn.Linear(in_features=256, out_features=64),
+            nn.Linear(in_features=256, out_features=128),
             nn.ReLU()
         )
 
-        self.linear = nn.Linear(in_features=15, out_features=64)
+        self.linear = nn.Linear(in_features=15, out_features=128)
         #self.linear2 = nn.Linear(in_features=256, out_features=3)
         self.act = nn.ReLU()
 
-        self.output = nn.Linear(in_features=128, out_features=3)
+        self.output = nn.Linear(in_features=256, out_features=3)
 
     def forward(self, state, board):
         x = self.conv1(board)

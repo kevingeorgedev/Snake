@@ -28,7 +28,7 @@ GREEN = (0, 255, 0)
 BLACK = (0,0,0)
 
 BLOCK_SIZE = 20
-SPEED = 100
+SPEED = 60
 
 class SnakeGameAI:
     
@@ -136,7 +136,7 @@ class SnakeGameAI:
             if i == 0:
                 pygame.draw.rect(self.display, GREEN, pygame.Rect(pt.x, pt.y, BLOCK_SIZE, BLOCK_SIZE))
             else:
-                pygame.draw.rect(self.display, (0, 0, int(255 * (l-i+1)/l)), pygame.Rect(pt.x, pt.y, BLOCK_SIZE, BLOCK_SIZE))
+                pygame.draw.rect(self.display, (0, 0, int(255 - (155 * (i - 1)) / l)), pygame.Rect(pt.x, pt.y, BLOCK_SIZE, BLOCK_SIZE)) # int(255 * (l-i+1)/l))
             #pygame.draw.rect(self.display, BLUE2, pygame.Rect(pt.x+4, pt.y+4, 12, 12))
             
         pygame.draw.rect(self.display, RED, pygame.Rect(self.food.x, self.food.y, BLOCK_SIZE, BLOCK_SIZE))
