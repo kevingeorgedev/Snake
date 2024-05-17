@@ -2,4 +2,6 @@ in-progress: Hamiltonian Cycle
 
 The purpose of the Hamiltonian Cycle method is to allow the bot to succeed in winning the game. This won't use any machine learning.
 
-<video controls src="Snake High Score with CNN.mp4" title="Snake High Score using CNN"></video>
+![Snake CNN High Score](<Snake CNN.gif>)
+
+Above is the highest score achieved from the Snake Reinforcement Learning Agent using a CNN for the board as input.
